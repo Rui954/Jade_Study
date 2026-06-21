@@ -69,8 +69,8 @@
 ### 本地运行
 1. 直接打开以下链接即可开玩：
    ```bash
-   git clone https://rui954.github.io/Jade_Study/Jade_Study
-   cd jade-study-game
+   https://rui954.github.io/Jade_Study/Jade_Study
+   
 
 ---
 
