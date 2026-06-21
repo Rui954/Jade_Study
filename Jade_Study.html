@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>翡翠书斋 v0.0.1beta</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+            background: #0f0b09;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            margin: 0;
+        }
+        #game-container {
+            width: 1150px;
+            max-width: 100%;
+            background: #1e1612;
+            border-radius: 32px;
+            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(200, 170, 140, 0.06);
+            padding: 18px;
+            position: relative;
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px 14px 8px;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.1);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        #game-title {
+            color: #e6d3c0;
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            cursor: default;
+        }
+        #game-title span {
+            color: #b09078;
+            font-weight: 300;
+        }
+        #title-sub {
+            font-size: 12px;
+            color: #8a7a6a;
+            letter-spacing: 1px;
+            margin-left: 6px;
+        }
+        #header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-hint,
+        .btn-reset,
+        .btn-story {
+            background: rgba(180, 150, 120, 0.08);
+            border: 1px solid rgba(180, 150, 120, 0.15);
+            color: #d4c0aa;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+        .btn-hint:hover,
+        .btn-reset:hover,
+        .btn-story:hover {
+            background: rgba(180, 150, 120, 0.2);
+            border-color: rgba(180, 150, 120, 0.3);
+            transform: scale(1.02);
+        }
+        #message-area {
+            color: #c8b4a0;
+            font-size: 14px;
+            padding: 6px 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 30px;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 140px;
+            border: 1px solid rgba(200, 170, 140, 0.04);
+            font-weight: 300;
+        }
+        #message-area .highlight {
+            color: #f0dcc8;
+            font-weight: 500;
+        }
+        #room-nav {
+            display: flex;
+            gap: 8px;
+            padding: 12px 4px 6px 4px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.06);
+            margin-bottom: 12px;
+        }
+        .room-btn {
+            background: rgba(40, 30, 24, 0.6);
+            border: 1px solid rgba(200, 170, 140, 0.08);
+            color: #8a7a6a;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+        .room-btn.active {
+            background: rgba(180, 150, 120, 0.12);
+            border-color: rgba(200, 170, 140, 0.25);
+            color: #ecd8c0;
+            box-shadow: 0 0 20px rgba(180, 150, 120, 0.02);
+        }
+        .room-btn:hover:not(:disabled) {
+            background: rgba(180, 150, 120, 0.15);
+            border-color: rgba(200, 170, 140, 0.2);
+            color: #ecd8c0;
+        }
+        .room-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(0.6);
+        }
+        #scene-wrapper {
+            background: #15100d;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(200, 170, 140, 0.04);
+            min-height: 460px;
+        }
+        #scene {
+            position: relative;
+            width: 100%;
+            min-height: 460px;
+            padding: 14px;
+            transition: opacity 0.35s ease;
+        }
+        #scene.fade {
+            opacity: 0;
+        }
+        #scene-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            width: 100%;
+            min-height: 430px;
+        }
+        #scene-visual {
+            flex: 2.5;
+            min-width: 260px;
+            background: #120e0b;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid rgba(200, 170, 140, 0.04);
+            display: flex;
+            flex-direction: column;
+        }
+        .scene-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.06);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .scene-header .name {
+            color: #c8b4a0;
+            font-size: 17px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .scene-header .progress {
+            color: #6a5a4a;
+            font-size: 13px;
+            font-weight: 300;
+        }
+        #interactives {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 10px;
+            flex: 1;
+            align-content: start;
+        }
+        .interactive-item {
+            background: rgba(50, 38, 30, 0.5);
+            border: 1px solid rgba(200, 170, 140, 0.06);
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #c8b4a0;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-height: 78px;
+            position: relative;
+        }
+        .interactive-item:hover:not(.disabled) {
+            background: rgba(70, 55, 44, 0.6);
+            border-color: rgba(200, 170, 140, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        .interactive-item .icon {
+            font-size: 28px;
+            line-height: 1.2;
+        }
+        .interactive-item .label {
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.2;
+        }
+        .interactive-item .sub {
+            font-size: 10px;
+            color: #7a6a5a;
+            font-style: italic;
+            margin-top: 2px;
+        }
+        .interactive-item.found {
+            border-color: rgba(180, 150, 120, 0.25);
+            background: rgba(180, 150, 120, 0.08);
+        }
+        .interactive-item.found .label {
+            opacity: 0.7;
+        }
+        .interactive-item.disabled {
+            opacity: 0.4;
+            filter: grayscale(0.5);
+            pointer-events: none;
+        }
+        #side-panel {
+            flex: 1;
+            min-width: 170px;
+            background: rgba(18, 14, 11, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(200, 170, 140, 0.04);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #side-panel .panel-title {
+            color: #6a5a4a;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.06);
+            padding-bottom: 8px;
+        }
+        #inventory {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 64px;
+            align-content: flex-start;
+        }
+        .inv-item {
+            background: rgba(50, 38, 30, 0.4);
+            border: 1px solid rgba(200, 170, 140, 0.06);
+            border-radius: 10px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #d4c0aa;
+            cursor: default;
+            transition: all 0.15s;
+        }
+        .inv-item .icon {
+            font-size: 18px;
+        }
+        .inv-item .name {
+            font-size: 12px;
+        }
+        #inventory-empty {
+            color: #4a3a2a;
+            font-size: 13px;
+            font-style: italic;
+            padding: 6px 0;
+            width: 100%;
+        }
+        .inv-note {
+            color: #4a3a2a;
+            font-size: 11px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(200, 170, 140, 0.04);
+            margin-top: auto;
+        }
+        #password-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 18px;
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+        }
+        #password-modal.show {
+            display: flex;
+        }
+        .password-box {
+            background: #1e1612;
+            padding: 32px 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(200, 170, 140, 0.12);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            max-width: 92%;
+            width: 380px;
+        }
+        .password-box h3 {
+            color: #e6d3c0;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            font-size: 18px;
+        }
+        .password-box p {
+            color: #8a7a6a;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+        .password-box input {
+            background: #0f0b09;
+            border: 1px solid rgba(200, 170, 140, 0.12);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 26px;
+            color: #e6d3c0;
+            text-align: center;
+            width: 180px;
+            outline: none;
+            font-family: inherit;
+            letter-spacing: 6px;
+        }
+        .password-box input:focus {
+            border-color: #b09078;
+            box-shadow: 0 0 30px rgba(180, 150, 120, 0.05);
+        }
+        .password-box .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .password-box .actions button {
+            background: rgba(180, 150, 120, 0.08);
+            border: 1px solid rgba(200, 170, 140, 0.1);
+            color: #d4c0aa;
+            padding: 8px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .password-box .actions button:hover {
+            background: rgba(180, 150, 120, 0.2);
+            border-color: rgba(200, 170, 140, 0.2);
+        }
+        .password-box .actions button.primary {
+            background: #b09078;
+            color: #0f0b09;
+            border-color: #b09078;
+        }
+        .password-box .actions button.primary:hover {
+            background: #c8a890;
+        }
+        .password-error {
+            color: #c07a6a;
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 22px;
+        }
+        #story-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 18px;
+            z-index: 150;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        #story-modal.show {
+            display: flex;
+        }
+        .story-box {
+            background: #1e1612;
+            padding: 32px 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(200, 170, 140, 0.12);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+            max-width: 92%;
+            width: 580px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #d4c0aa;
+        }
+        .story-box h2 {
+            color: #ecd8c0;
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.1);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .story-box .story-entry {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(200, 170, 140, 0.06);
+        }
+        .story-box .story-entry h3 {
+            color: #ecd8c0;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .story-box .story-entry p {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #c8b4a0;
+        }
+        .story-box .story-empty {
+            color: #6a5a4a;
+            font-style: italic;
+            padding: 20px 0;
+            text-align: center;
+        }
+        .story-box .close-story {
+            margin-top: 16px;
+            background: rgba(180, 150, 120, 0.15);
+            border: 1px solid rgba(200, 170, 140, 0.15);
+            color: #ecd8c0;
+            padding: 8px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .story-box .close-story:hover {
+            background: rgba(180, 150, 120, 0.25);
+        }
+        #win-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 18px;
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        #win-modal.show {
+            display: flex;
+        }
+        .win-box {
+            text-align: center;
+            padding: 44px 50px;
+            background: #1e1612;
+            border-radius: 28px;
+            border: 1px solid rgba(200, 170, 140, 0.15);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+            max-width: 92%;
+        }
+        .win-box .big-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+        .win-box h2 {
+            color: #ecd8c0;
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+        }
+        .win-box p {
+            color: #b09880;
+            font-size: 16px;
+            margin: 14px 0 28px;
+            line-height: 1.7;
+        }
+        .win-box button {
+            background: #b09078;
+            border: none;
+            color: #0f0b09;
+            padding: 12px 44px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .win-box button:hover {
+            background: #c8a890;
+            transform: scale(1.02);
+        }
+        @media (max-width: 760px) {
+            #scene-content {
+                flex-direction: column;
+            }
+            #side-panel {
+                min-width: unset;
+            }
+            #interactives {
+                grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            }
+            .password-box {
+                padding: 24px 18px;
+            }
+            .password-box input {
+                width: 140px;
+                font-size: 22px;
+            }
+            #game-title {
+                font-size: 18px;
+            }
+            #header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #room-nav {
+                justify-content: center;
+            }
+            .story-box {
+                padding: 24px 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            #interactives {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+            .interactive-item .icon {
+                font-size: 22px;
+            }
+            .win-box {
+                padding: 28px 16px;
+            }
+            .win-box .big-icon {
+                font-size: 54px;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0b09;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a2a1a;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="header">
+            <div id="game-title">📜 翡翠<span>书斋</span><span id="title-sub"></span></div>
+            <div id="header-controls">
+                <button class="btn-story" id="btn-story">📖 故事</button>
+                <button class="btn-hint" id="btn-hint">💡 提示</button>
+                <button class="btn-reset" id="btn-reset">⟳ 重开</button>
+            </div>
+        </div>
+        <div id="message-area">🔍 探索门厅，寻找线索...</div>
+        <div id="room-nav">
+            <button class="room-btn active" data-room="hall" id="nav-hall">🏛️ 门厅</button>
+            <button class="room-btn" data-room="crypt" id="nav-crypt" disabled>🪦 地窖</button>
+            <button class="room-btn" data-room="study" id="nav-study" disabled>📚 书房</button>
+            <button class="room-btn" data-room="garden" id="nav-garden" disabled>🌿 花园</button>
+            <button class="room-btn" data-room="tower" id="nav-tower" disabled>🗼 塔楼</button>
+            <button class="room-btn" data-room="sanctum" id="nav-sanctum" disabled>✨ 圣殿</button>
+        </div>
+        <div id="scene-wrapper">
+            <div id="scene">
+                <div id="scene-content">
+                    <div id="scene-visual">
+                        <div class="scene-header">
+                            <span class="name" id="scene-name">🏛️ 门厅</span>
+                            <span class="progress" id="scene-progress">0 / 0</span>
+                        </div>
+                        <div id="interactives"></div>
+                    </div>
+                    <div id="side-panel">
+                        <div class="panel-title">🎒 物品栏</div>
+                        <div id="inventory"><div id="inventory-empty">空 · 探索收集</div></div>
+                        <div class="inv-note">💡 点击场景物品自动使用</div>
+                    </div>
+                </div>
+                <div id="password-modal">
+                    <div class="password-box">
+                        <h3>🔐 输入密码</h3>
+                        <p id="password-hint">请输入三位数字</p>
+                        <input type="text" id="password-input" maxlength="3" autocomplete="off" />
+                        <div class="password-error" id="password-error"></div>
+                        <div class="actions">
+                            <button id="pwd-cancel">取消</button>
+                            <button class="primary" id="pwd-confirm">确认</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="story-modal">
+                    <div class="story-box">
+                        <h2>📖 翡翠书斋 · 编年史</h2>
+                        <div id="story-content">
+                            <div class="story-empty">尚未解锁任何故事片段，继续探索吧...</div>
+                        </div>
+                        <button class="close-story" id="close-story">关闭</button>
+                    </div>
+                </div>
+                <div id="win-modal">
+                    <div class="win-box">
+                        <div class="big-icon">🏆</div>
+                        <h2>✦ 六幕终章 ✦</h2>
+                        <p>你穿越了门厅、地窖、书房、花园、塔楼与圣殿，<br />翡翠书斋的永恒智慧终于尽数归于你手。<br /><br />“智慧如翡翠，历经岁月而弥坚。” —— 艾德蒙·格雷</p>
+                        <button id="win-restart">再次挑战</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            'use strict';
+
+            // ---------- 故事数据 ----------
+            const STORY_PIECES = {
+                hall_intro: {
+                    id: 'hall_intro',
+                    title: '🏛️ 门厅 · 初见',
+                    text: '你踏入翡翠书斋的门厅，空气中弥漫着檀木与旧纸的气息。墙上的家族肖像画凝视着你——那是艾德蒙·格雷的祖辈，他们眼中闪烁着与书斋同样的秘密。格雷家族世代守护着“永恒智慧”，据说它藏在书斋的最深处。',
+                    trigger: 'enter_hall'
+                },
+                clock_secret: {
+                    id: 'clock_secret',
+                    title: '🕰️ 时间之锁',
+                    text: '落地钟的齿轮声仿佛在低语： “日升月落，时光如梭；太阳之徽，开启暗道。” 你意识到，这座钟不仅是计时器，更是通往地窖的钥匙。格雷巧妙地利用天象与机械，将秘密封存于指针之间。',
+                    trigger: 'clock_opened'
+                },
+                statue_awaken: {
+                    id: 'statue_awaken',
+                    title: '🗿 石像的凝视',
+                    text: '当太阳徽章嵌入猫头鹰石像的刹那，石像的双眼迸发出炽热的光芒。你听见古老的回声： “白昼之火，照亮暗途。” 地窖的入口在石像后方缓缓裂开，仿佛书斋在邀请你进入它的腹地。',
+                    trigger: 'statue_solved'
+                },
+                crypt_enter: {
+                    id: 'crypt_enter',
+                    title: '🪦 地窖 · 沉睡之厅',
+                    text: '地窖里弥漫着尘土与腐朽的气息，石棺、祭坛和断裂的柱基诉说着守护者的故事。格雷在此安放了他的第一重封印——月之碎片与夜光石，只有集齐二者才能唤醒通往书房的钥匙。',
+                    trigger: 'enter_crypt'
+                },
+                moon_altar: {
+                    id: 'moon_altar',
+                    title: '🌙 月之祭坛',
+                    text: '你将月之碎片放入祭坛，银色的光芒如流水般弥漫，与夜光石交融。祭坛上浮现一行古文字： “月光之下，暗影藏钥；夜石为引，智门乃开。” 你感到书斋的意志正在引导你前行。',
+                    trigger: 'altar_crypt_used'
+                },
+                study_enter: {
+                    id: 'study_enter',
+                    title: '📚 书房 · 知识之殿',
+                    text: '推开沉重的铁门，书房展现在你眼前——四壁皆是古籍，星象地球仪与铜镜遥相呼应。格雷的智慧在此汇聚： “以镜为眼，以书为径，以火为引，以笔为证。” 每一件物品都是解开谜题的关键。',
+                    trigger: 'enter_study'
+                },
+                mirror_revelation: {
+                    id: 'mirror_revelation',
+                    title: '🪞 镜中真言',
+                    text: '擦亮铜镜的瞬间，灰尘褪去，镜中映出书架上的密码，那是开启书架的钥匙。你明白了： “镜乃真理之镜，映照隐藏之序。” 格雷用镜像反转了密码，只有清洁之眼才能看透。',
+                    trigger: 'mirror_cleaned'
+                },
+                garden_enter: {
+                    id: 'garden_enter',
+                    title: '🌿 花园 · 自然之谜',
+                    text: '花园里，喷泉干涸，花坛芬芳，古树参天。格雷将自然的规律融入谜题： “水落石出，月影泉涌；金钥开锁，铁锹掘真。” 每一处草木都承载着古老的暗示。',
+                    trigger: 'enter_garden'
+                },
+                tower_enter: {
+                    id: 'tower_enter',
+                    title: '🗼 塔楼 · 星空之巅',
+                    text: '塔楼高耸入云，挂毯、书柜、望远镜与星盘排列有序。格雷在此仰望星空，将星座的排列化作密码： “星辰为语，数字为符；三圣合一，门扉乃启。” 塔楼是连接凡间与圣殿的桥梁。',
+                    trigger: 'enter_tower'
+                },
+                treasure_unlock: {
+                    id: 'treasure_unlock',
+                    title: '📦 宝箱 · 圣物归位',
+                    text: '当翡翠宝石、宝石碎片与古老石板同时嵌入宝箱，密码正确后，宝箱轰然打开。里面静静躺着一把符文钥匙——它闪耀着翡翠般的光泽，仿佛整个书斋的精魂都凝聚其上。',
+                    trigger: 'treasure_opened'
+                },
+                sanctum_enter: {
+                    id: 'sanctum_enter',
+                    title: '✨ 圣殿 · 永恒之室',
+                    text: '圣殿是书斋的心脏，白玉祭坛、符文石柱和水晶簇环绕着中央的虚空。你感受到格雷的意志在此凝聚： “符文为骨，星象为魂；水火交融，智慧永生。” 最终谜题正等待着你。',
+                    trigger: 'enter_sanctum'
+                },
+                final_altar: {
+                    id: 'final_altar',
+                    title: '🪔 祭坛 · 智慧之冠',
+                    text: '当符文钥匙插入祭坛，四根石柱同时点亮，光芒汇聚成一道光柱，直冲天际。翡翠书斋的永恒智慧终于显现——它并非金银财宝，而是知识本身： “万物皆有其理，探索者即智者。” 你完成了格雷的遗愿，成为新的守护者。',
+                    trigger: 'altar_activated'
+                }
+            };
+
+            // ---------- 游戏核心 ----------
+            const GAME = {
+                scenes: {
+                    hall: {
+                        id: 'hall',
+                        name: '🏛️ 门厅',
+                        items: [
+                            { id: 'painting', label: '🖼️ 肖像画', desc: '家族肖像，背后似乎有物。', actionable: true,
+                            action: 'painting' },
+                            { id: 'clock', label: '🕰️ 落地钟', desc: '高大的红木钟，钟面有纹。', actionable: true,
+                            action: 'clock' },
+                            { id: 'statue', label: '🗿 石像', desc: '猫头鹰石像，底座有凹槽。', actionable: true,
+                            action: 'statue' },
+                            { id: 'carpet', label: '🧶 地毯', desc: '织锦地毯，边缘褶皱。', actionable: true,
+                            action: 'carpet' },
+                            { id: 'window', label: '🪟 窗户', desc: '彩绘玻璃窗，绘有星月。', actionable: true,
+                            action: 'window' },
+                            { id: 'chandelier', label: '💡 吊灯', desc: '水晶吊灯，垂落着链条。', actionable: true,
+                                action: 'chandelier' },
+                            { id: 'door', label: '🚪 大门', desc: '通往地窖的门，紧锁着。', actionable: true, action: 'door' },
+                        ]
+                    },
+                    crypt: {
+                        id: 'crypt',
+                        name: '🪦 地窖',
+                        items: [
+                            { id: 'sarcophagus', label: '⚰️ 石棺', desc: '古老的石棺，盖板有浮雕。', actionable: true,
+                                action: 'sarcophagus' },
+                            { id: 'altar_crypt', label: '🪔 祭坛', desc: '石祭坛，摆放着烛台。', actionable: true,
+                                action: 'altar_crypt' },
+                            { id: 'pillar_crypt', label: '🗿 柱基', desc: '断裂的石柱，底座刻字。', actionable: true,
+                                action: 'pillar_crypt' },
+                            { id: 'chest_crypt', label: '📦 铁箱', desc: '生锈的铁箱，挂着一把锁。', actionable: true,
+                                action: 'chest_crypt' },
+                            { id: 'crypt_door', label: '🚪 铁门', desc: '通往书房的门，需要钥匙。', actionable: true,
+                                action: 'crypt_door' },
+                            { id: 'torch', label: '🔥 火炬', desc: '墙上的火炬，已经熄灭。', actionable: true,
+                            action: 'torch' },
+                        ]
+                    },
+                    study: {
+                        id: 'study',
+                        name: '📚 书房',
+                        items: [
+                            { id: 'globe', label: '🌍 地球仪', desc: '星象地球仪，底座可转动。', actionable: true,
+                            action: 'globe' },
+                            { id: 'mirror', label: '🪞 铜镜', desc: '落满灰尘的壁挂铜镜。', actionable: true, action: 'mirror' },
+                            { id: 'bookshelf', label: '📚 书架', desc: '装满古籍的书架，有机关。', actionable: true,
+                                action: 'bookshelf' },
+                            { id: 'fireplace', label: '🔥 壁炉', desc: '冰冷的壁炉，堆满灰烬。', actionable: true,
+                            action: 'fireplace' },
+                            { id: 'desk', label: '🪑 书桌', desc: '红木书桌，抽屉锁着。', actionable: true, action: 'desk' },
+                            { id: 'fresco', label: '🎨 壁画', desc: '描绘花园的壁画，有隐语。', actionable: true,
+                            action: 'fresco' },
+                            { id: 'inkwell', label: '🖊️ 墨水瓶', desc: '古老的墨水瓶，半满。', actionable: true,
+                                action: 'inkwell' },
+                            { id: 'quill', label: '🪶 羽毛笔', desc: '天鹅羽毛笔，尖部已干。', actionable: true,
+                                action: 'quill' },
+                            { id: 'candle_study', label: '🕯️ 烛台', desc: '书桌上的烛台，有蜡泪。', actionable: true,
+                                action: 'candle_study' },
+                        ]
+                    },
+                    garden: {
+                        id: 'garden',
+                        name: '🌿 花园',
+                        items: [
+                            { id: 'fountain', label: '⛲ 喷泉', desc: '干涸的喷泉，池底有锁孔。', actionable: true,
+                            action: 'fountain' },
+                            { id: 'flowerbed', label: '🌺 花坛', desc: '繁花盛开，泥土松软。', actionable: true,
+                            action: 'flowerbed' },
+                            { id: 'tree', label: '🌳 古树', desc: '参天古树，根部有挖掘痕迹。', actionable: true,
+                            action: 'tree' },
+                            { id: 'garden_statue', label: '🗿 园丁像', desc: '手持铁锹的石像，底座有锁孔。', actionable: true,
+                                action: 'garden_statue' },
+                            { id: 'gate', label: '🚪 花园门', desc: '通往塔楼的门，紧锁着。', actionable: true, action: 'gate' },
+                            { id: 'well', label: '🪣 水井', desc: '石砌水井，深不见底。', actionable: true, action: 'well' },
+                            { id: 'bush', label: '🌿 灌木丛', desc: '茂密的灌木，似乎藏着什么。', actionable: true,
+                            action: 'bush' },
+                            { id: 'bench', label: '🪑 长椅', desc: '石质长椅，刻有诗句。', actionable: true,
+                            action: 'bench' },
+                        ]
+                    },
+                    tower: {
+                        id: 'tower',
+                        name: '🗼 塔楼',
+                        items: [
+                            { id: 'tapestry', label: '🧶 挂毯', desc: '织锦挂毯，边缘有缝线。', actionable: true,
+                                action: 'tapestry' },
+                            { id: 'bookcase', label: '📖 书柜', desc: '装满典籍的书柜，有密码锁。', actionable: true,
+                                action: 'bookcase' },
+                            { id: 'telescope', label: '🔭 望远镜', desc: '黄铜天文望远镜，指向星空。', actionable: true,
+                                action: 'telescope' },
+                            { id: 'treasure', label: '📦 宝箱', desc: '雕花金边宝箱，等待开启。', actionable: true,
+                                action: 'treasure' },
+                            { id: 'astrolabe', label: '🔮 星盘', desc: '青铜星盘，刻满刻度。', actionable: true,
+                                action: 'astrolabe' },
+                            { id: 'candle_tower', label: '🕯️ 烛台', desc: '三根蜡烛，蜡泪凝结。', actionable: true,
+                                action: 'candle_tower' },
+                            { id: 'painting_tower', label: '🖼️ 画像', desc: '一幅年轻的格雷画像。', actionable: true,
+                                action: 'painting_tower' },
+                        ]
+                    },
+                    sanctum: {
+                        id: 'sanctum',
+                        name: '✨ 圣殿',
+                        items: [
+                            { id: 'altar', label: '🪔 祭坛', desc: '白玉祭坛，中央有凹槽。', actionable: true,
+                            action: 'altar' },
+                            { id: 'pillar', label: '🗿 石柱', desc: '四根石柱，刻着符文。', actionable: true,
+                            action: 'pillar' },
+                            { id: 'crystal', label: '💎 水晶', desc: '巨大的水晶簇，折射光芒。', actionable: true,
+                                action: 'crystal' },
+                            { id: 'scroll_sanctum', label: '📜 卷轴', desc: '一幅古老的卷轴，写着预言。', actionable: true,
+                                action: 'scroll_sanctum' },
+                            { id: 'brazier', label: '🔥 火盆', desc: '铜制火盆，火焰跳动。', actionable: true,
+                                action: 'brazier' },
+                        ]
+                    }
+                },
+                inventory: [],
+                clues: [],
+                storyUnlocked: [],
+                state: {
+                    currentScene: 'hall',
+                    // 门厅
+                    paintingSearched: false,
+                    clockOpened: false,
+                    statueSolved: false,
+                    carpetLifted: false,
+                    windowOpened: false,
+                    chandelierSearched: false,
+                    doorUnlocked: false,
+                    // 地窖
+                    sarcophagusOpened: false,
+                    altarCryptUsed: false,
+                    pillarCryptRead: false,
+                    chestCryptOpened: false,
+                    cryptDoorUnlocked: false,
+                    torchLit: false,
+                    // 书房
+                    globeSearched: false,
+                    mirrorCleaned: false,
+                    bookshelfUnlocked: false,
+                    fireplaceLit: false,
+                    deskOpened: false,
+                    frescoRead: false,
+                    inkwellUsed: false,
+                    quillUsed: false,
+                    candleStudyUsed: false,
+                    // 花园
+                    fountainSearched: false,
+                    flowerbedDug: false,
+                    treeDug: false,
+                    statueLocked: false,
+                    gardenGateUnlocked: false,
+                    wellDrawn: false,
+                    bushSearched: false,
+                    benchRead: false,
+                    // 塔楼
+                    tapestryOpened: false,
+                    bookcaseUnlocked: false,
+                    telescopeUsed: false,
+                    treasureOpened: false,
+                    astrolabeUsed: false,
+                    candleTowerLit: false,
+                    paintingTowerSearched: false,
+                    // 圣殿
+                    altarActivated: false,
+                    pillarSolved: false,
+                    crystalUsed: false,
+                    scrollSanctumRead: false,
+                    brazierLit: false,
+                    // 解锁
+                    cryptUnlocked: false,
+                    studyUnlocked: false,
+                    gardenUnlocked: false,
+                    towerUnlocked: false,
+                    sanctumUnlocked: false,
+                    // 胜利
+                    gameWon: false,
+                    // 随机密码
+                    passwords: {}
+                }
+            };
+
+            // ---------- 随机密码生成 ----------
+            function generateRandomPassword() {
+                return String(Math.floor(Math.random() * 900) + 100); // 100-999
+            }
+
+            function initPasswords() {
+                GAME.state.passwords = {
+                    bookshelf: generateRandomPassword(),
+                    gardenGate: generateRandomPassword(),
+                    bookcase: generateRandomPassword(),
+                    treasure: generateRandomPassword(),
+                    torch: generateRandomPassword(),
+                    candleStudy: generateRandomPassword(),
+                    quill: generateRandomPassword(),
+                    window: generateRandomPassword(),
+                    candleTower: generateRandomPassword(),
+                };
+            }
+
+            const $ = s => document.querySelector(s);
+            const $$ = s => document.querySelectorAll(s);
+            const dom = {
+                scene: $('#scene'),
+                sceneName: $('#scene-name'),
+                sceneProgress: $('#scene-progress'),
+                interactives: $('#interactives'),
+                inventory: $('#inventory'),
+                inventoryEmpty: $('#inventory-empty'),
+                message: $('#message-area'),
+                navHall: $('#nav-hall'),
+                navCrypt: $('#nav-crypt'),
+                navStudy: $('#nav-study'),
+                navGarden: $('#nav-garden'),
+                navTower: $('#nav-tower'),
+                navSanctum: $('#nav-sanctum'),
+                modal: $('#password-modal'),
+                pwdInput: $('#password-input'),
+                pwdHint: $('#password-hint'),
+                pwdError: $('#password-error'),
+                pwdCancel: $('#pwd-cancel'),
+                pwdConfirm: $('#pwd-confirm'),
+                storyModal: $('#story-modal'),
+                storyContent: $('#story-content'),
+                storyClose: $('#close-story'),
+                btnStory: $('#btn-story'),
+                winModal: $('#win-modal'),
+                winRestart: $('#win-restart'),
+                btnHint: $('#btn-hint'),
+                btnReset: $('#btn-reset'),
+            };
+
+            // ---------- 故事系统 ----------
+            function unlockStory(id) {
+                if (GAME.storyUnlocked.includes(id)) return;
+                GAME.storyUnlocked.push(id);
+                const piece = STORY_PIECES[id];
+                if (piece) {
+                    setMessage(`📖 解锁故事：${piece.title}`, true);
+                }
+                renderStoryModal();
+            }
+
+            function renderStoryModal() {
+                const container = dom.storyContent;
+                if (GAME.storyUnlocked.length === 0) {
+                    container.innerHTML = '<div class="story-empty">尚未解锁任何故事片段，继续探索吧...</div>';
+                    return;
+                }
+                let html = '';
+                GAME.storyUnlocked.forEach(id => {
+                    const piece = STORY_PIECES[id];
+                    if (piece) {
+                        html += `
+                            <div class="story-entry">
+                                <h3>${piece.title}</h3>
+                                <p>${piece.text}</p>
+                            </div>
+                        `;
+                    }
+                });
+                container.innerHTML = html;
+            }
+
+            // ---------- 工具函数 ----------
+            function setMessage(text, highlight = false) {
+                if (highlight) {
+                    dom.message.innerHTML = `🔍 <span class="highlight">${text}</span>`;
+                } else {
+                    dom.message.textContent = `🔍 ${text}`;
+                }
+            }
+
+            function addClue(text) {
+                if (!GAME.clues.includes(text)) GAME.clues.push(text);
+            }
+
+            function addInventory(id, label, desc) {
+                if (GAME.inventory.some(i => i.id === id)) return;
+                GAME.inventory.push({ id, label, desc });
+                renderInventory();
+            }
+
+            function removeInventory(id) {
+                const idx = GAME.inventory.findIndex(i => i.id === id);
+                if (idx !== -1) { GAME.inventory.splice(idx, 1);
+                    renderInventory(); return true; }
+                return false;
+            }
+
+            function hasInventory(id) {
+                return GAME.inventory.some(i => i.id === id);
+            }
+
+            function renderInventory() {
+                const inv = GAME.inventory;
+                dom.inventory.innerHTML = '';
+                if (inv.length === 0) {
+                    dom.inventory.innerHTML = '<div id="inventory-empty">空 · 探索收集</div>';
+                    return;
+                }
+                inv.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'inv-item';
+                    const iconMatch = item.label.match(/^([^\s]+)\s/);
+                    if (iconMatch) {
+                        const iconSpan = document.createElement('span');
+                        iconSpan.className = 'icon';
+                        iconSpan.textContent = iconMatch[1];
+                        el.appendChild(iconSpan);
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'name';
+                        nameSpan.textContent = item.label.replace(/^[^\s]+\s/, '');
+                        el.appendChild(nameSpan);
+                    } else {
+                        el.textContent = item.label;
+                    }
+                    el.title = item.desc || '';
+                    dom.inventory.appendChild(el);
+                });
+            }
+
+            let pwdCallback = null;
+
+            function showPasswordModal(hint, callback, placeholder = '三位数字') {
+                dom.pwdHint.textContent = hint || '请输入三位数字';
+                dom.pwdError.textContent = '';
+                dom.pwdInput.value = '';
+                dom.pwdInput.placeholder = placeholder || '三位数字';
+                dom.pwdInput.maxLength = 3;
+                dom.modal.classList.add('show');
+                dom.pwdInput.focus();
+                pwdCallback = callback;
+
+                const newConfirm = dom.pwdConfirm.cloneNode(true);
+                const newCancel = dom.pwdCancel.cloneNode(true);
+                dom.pwdConfirm.parentNode.replaceChild(newConfirm, dom.pwdConfirm);
+                dom.pwdCancel.parentNode.replaceChild(newCancel, dom.pwdCancel);
+                dom.pwdConfirm = newConfirm;
+                dom.pwdCancel = newCancel;
+
+                dom.pwdConfirm.addEventListener('click', () => {
+                    const val = dom.pwdInput.value.trim();
+                    if (!val) { dom.pwdError.textContent = '请输入密码'; return; }
+                    if (pwdCallback) {
+                        const result = pwdCallback(val);
+                        if (result === true) { dom.modal.classList.remove('show');
+                            pwdCallback = null; } else if (result === false) {
+                            dom.pwdError.textContent = '❌ 密码错误';
+                            dom.pwdInput.value = '';
+                            dom.pwdInput.focus();
+                        } else {
+                            dom.modal.classList.remove('show');
+                            pwdCallback = null;
+                        }
+                    }
+                });
+                dom.pwdCancel.addEventListener('click', () => {
+                    dom.modal.classList.remove('show');
+                    pwdCallback = null;
+                    setMessage('已取消输入。');
+                });
+                dom.pwdInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') dom.pwdConfirm.click();
+                    if (e.key === 'Escape') dom.pwdCancel.click();
+                });
+            }
+
+            function updateNav() {
+                const s = GAME.state;
+                dom.navHall.classList.toggle('active', s.currentScene === 'hall');
+                dom.navCrypt.classList.toggle('active', s.currentScene === 'crypt');
+                dom.navStudy.classList.toggle('active', s.currentScene === 'study');
+                dom.navGarden.classList.toggle('active', s.currentScene === 'garden');
+                dom.navTower.classList.toggle('active', s.currentScene === 'tower');
+                dom.navSanctum.classList.toggle('active', s.currentScene === 'sanctum');
+                dom.navCrypt.disabled = !s.cryptUnlocked;
+                dom.navStudy.disabled = !s.studyUnlocked;
+                dom.navGarden.disabled = !s.gardenUnlocked;
+                dom.navTower.disabled = !s.towerUnlocked;
+                dom.navSanctum.disabled = !s.sanctumUnlocked;
+            }
+
+            function switchScene(id) {
+                if (GAME.state.gameWon) return;
+                const scene = GAME.scenes[id];
+                if (!scene) return;
+                if (id === 'crypt' && !GAME.state.cryptUnlocked) { setMessage('门厅的机关尚未开启地窖入口。'); return; }
+                if (id === 'study' && !GAME.state.studyUnlocked) { setMessage('地窖的铁门尚未打开。'); return; }
+                if (id === 'garden' && !GAME.state.gardenUnlocked) { setMessage('书房的秘密尚未解开。'); return; }
+                if (id === 'tower' && !GAME.state.towerUnlocked) { setMessage('花园的门尚未打开。'); return; }
+                if (id === 'sanctum' && !GAME.state.sanctumUnlocked) { setMessage('你还没有找到进入圣殿的方法。'); return; }
+
+                GAME.state.currentScene = id;
+                dom.scene.classList.add('fade');
+                setTimeout(() => {
+                    renderScene(id);
+                    updateNav();
+                    dom.scene.classList.remove('fade');
+                    if (id === 'hall') unlockStory('hall_intro');
+                    if (id === 'crypt') unlockStory('crypt_enter');
+                    if (id === 'study') unlockStory('study_enter');
+                    if (id === 'garden') unlockStory('garden_enter');
+                    if (id === 'tower') unlockStory('tower_enter');
+                    if (id === 'sanctum') unlockStory('sanctum_enter');
+                }, 280);
+            }
+
+            function renderScene(id) {
+                const scene = GAME.scenes[id];
+                if (!scene) return;
+                dom.sceneName.textContent = scene.name;
+                const items = scene.items;
+                let found = items.filter(i => i.found).length;
+                dom.sceneProgress.textContent = `${found} / ${items.length}`;
+
+                dom.interactives.innerHTML = '';
+                items.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'interactive-item';
+                    if (item.found) el.classList.add('found');
+                    if (item.disabled) el.classList.add('disabled');
+
+                    const iconMatch = item.label.match(/^([^\s]+)\s/);
+                    if (iconMatch) {
+                        const iconSpan = document.createElement('div');
+                        iconSpan.className = 'icon';
+                        iconSpan.textContent = iconMatch[1];
+                        el.appendChild(iconSpan);
+                        const labelSpan = document.createElement('div');
+                        labelSpan.className = 'label';
+                        labelSpan.textContent = item.label.replace(/^[^\s]+\s/, '');
+                        el.appendChild(labelSpan);
+                    } else {
+                        const iconSpan = document.createElement('div');
+                        iconSpan.className = 'icon';
+                        iconSpan.textContent = '📦';
+                        el.appendChild(iconSpan);
+                        const labelSpan = document.createElement('div');
+                        labelSpan.className = 'label';
+                        labelSpan.textContent = item.label;
+                        el.appendChild(labelSpan);
+                    }
+                    if (item.sub) {
+                        const sub = document.createElement('div');
+                        sub.className = 'sub';
+                        sub.textContent = item.sub;
+                        el.appendChild(sub);
+                    }
+                    el.dataset.itemId = item.id;
+                    el.addEventListener('click', () => handleItemClick(item.id, id));
+                    dom.interactives.appendChild(el);
+                });
+                renderInventory();
+                updateNav();
+            }
+
+            function handleItemClick(itemId, sceneId) {
+                if (GAME.state.gameWon) return;
+                const scene = GAME.scenes[sceneId];
+                const item = scene.items.find(i => i.id === itemId);
+                if (!item || item.disabled) return;
+
+                const actionMap = {
+                    painting: actionPainting,
+                    clock: actionClock,
+                    statue: actionStatue,
+                    door: actionDoor,
+                    carpet: actionCarpet,
+                    window: actionWindow,
+                    chandelier: actionChandelier,
+                    sarcophagus: actionSarcophagus,
+                    altar_crypt: actionAltarCrypt,
+                    pillar_crypt: actionPillarCrypt,
+                    chest_crypt: actionChestCrypt,
+                    crypt_door: actionCryptDoor,
+                    torch: actionTorch,
+                    globe: actionGlobe,
+                    mirror: actionMirror,
+                    bookshelf: actionBookshelf,
+                    fireplace: actionFireplace,
+                    desk: actionDesk,
+                    fresco: actionFresco,
+                    inkwell: actionInkwell,
+                    quill: actionQuill,
+                    candle_study: actionCandleStudy,
+                    fountain: actionFountain,
+                    flowerbed: actionFlowerbed,
+                    tree: actionTree,
+                    garden_statue: actionGardenStatue,
+                    gate: actionGate,
+                    well: actionWell,
+                    bush: actionBush,
+                    bench: actionBench,
+                    tapestry: actionTapestry,
+                    bookcase: actionBookcase,
+                    telescope: actionTelescope,
+                    treasure: actionTreasure,
+                    astrolabe: actionAstrolabe,
+                    candle_tower: actionCandleTower,
+                    painting_tower: actionPaintingTower,
+                    altar: actionAltar,
+                    pillar: actionPillar,
+                    crystal: actionCrystal,
+                    scroll_sanctum: actionScrollSanctum,
+                    brazier: actionBrazier,
+                };
+                if (actionMap[itemId]) {
+                    actionMap[itemId](item, sceneId);
+                } else {
+                    setMessage(`你端详了一下 ${item.label}，${item.desc || '似乎平平无奇。'}`);
+                }
+            }
+
+            // ---------- 动作实现 ----------
+            // 门厅
+            function actionPainting(item, sceneId) {
+                if (GAME.state.paintingSearched) { setMessage('画框后面已经空了。'); return; }
+                GAME.state.paintingSearched = true;
+                item.found = true;
+                addClue('画作背后藏着一把发条钥匙。');
+                addInventory('winding_key', '🔑 发条钥匙', '用来给落地钟上弦。');
+                setMessage('你掀开画像，掉出一把 <span class="highlight">发条钥匙</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionClock(item, sceneId) {
+                if (GAME.state.clockOpened) { setMessage('落地钟已经打开，里面空空如也。'); return; }
+                if (!hasInventory('winding_key')) { setMessage('需要发条钥匙才能打开。'); return; }
+                removeInventory('winding_key');
+                GAME.state.clockOpened = true;
+                item.found = true;
+                addClue('落地钟内藏有一枚太阳徽章。');
+                addInventory('sun_medal', '☀️ 太阳徽章', '铜质徽章，刻着光芒四射的太阳。');
+                setMessage('你插入钥匙转动，钟门弹开，里面有一枚 <span class="highlight">太阳徽章</span>！', true);
+                unlockStory('clock_secret');
+                renderScene(sceneId);
+            }
+
+            function actionStatue(item, sceneId) {
+                if (GAME.state.statueSolved) { setMessage('石像底座已经开启，地窖入口打开。'); return; }
+                if (!hasInventory('sun_medal')) { setMessage('底座有圆形凹槽，需要一枚徽章。'); return; }
+                removeInventory('sun_medal');
+                GAME.state.statueSolved = true;
+                GAME.state.cryptUnlocked = true;
+                item.found = true;
+                addClue('太阳徽章嵌入石像，地窖的门应声而开。');
+                setMessage('徽章嵌入，石像双眼闪光 — <span class="highlight">地窖的门打开了</span>！', true);
+                unlockStory('statue_awaken');
+                renderScene(sceneId);
+                setTimeout(() => setMessage('🪦 你现在可以前往地窖了。'), 500);
+            }
+
+            function actionDoor(item, sceneId) {
+                if (GAME.state.cryptUnlocked) { setMessage('地窖的门已经敞开。'); return; }
+                setMessage('门被锁住了，似乎需要某种机关。');
+            }
+
+            function actionCarpet(item, sceneId) {
+                if (GAME.state.carpetLifted) { setMessage('地毯下什么也没有了。'); return; }
+                GAME.state.carpetLifted = true;
+                item.found = true;
+                addClue('地毯下藏着一根火柴。');
+                addInventory('match', '🔥 火柴', '一根老式火柴，可以点燃蜡烛。');
+                setMessage('你掀起地毯，发现下面压着一根 <span class="highlight">火柴</span>。', true);
+                renderScene(sceneId);
+            }
+
+            function actionWindow(item, sceneId) {
+                if (GAME.state.windowOpened) { setMessage('窗户已经打开，外面是花园的景色。'); return; }
+                GAME.state.windowOpened = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.window;
+                addClue(`窗户上刻着数字 "${pwd}" 。`);
+                setMessage(`你推开窗户，发现窗框上刻着数字 <span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionChandelier(item, sceneId) {
+                if (GAME.state.chandelierSearched) { setMessage('吊灯上已经空了。'); return; }
+                GAME.state.chandelierSearched = true;
+                item.found = true;
+                addClue('吊灯上藏着一把铜钥匙。');
+                addInventory('copper_key_hall', '🔑 铜钥匙', '黄铜钥匙，齿痕古老。');
+                setMessage('你拉下吊灯链条，一把 <span class="highlight">铜钥匙</span> 掉落下来！', true);
+                renderScene(sceneId);
+            }
+
+            // 地窖
+            function actionSarcophagus(item, sceneId) {
+                if (GAME.state.sarcophagusOpened) { setMessage('石棺已经打开，里面只有枯骨。'); return; }
+                if (!hasInventory('copper_key_hall')) { setMessage('石棺的锁扣需要一把铜钥匙。'); return; }
+                removeInventory('copper_key_hall');
+                GAME.state.sarcophagusOpened = true;
+                item.found = true;
+                addClue('石棺中有一块月之碎片。');
+                addInventory('moon_shard', '🌙 月之碎片', '银色的月之碎片，散发着幽光。');
+                setMessage('你用铜钥匙打开石棺，发现一块 <span class="highlight">月之碎片</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionAltarCrypt(item, sceneId) {
+                if (GAME.state.altarCryptUsed) { setMessage('祭坛已经被激活，获得了夜光石。'); return; }
+                if (!hasInventory('moon_shard')) { setMessage('祭坛上有一个凹槽，似乎需要月之碎片。'); return; }
+                removeInventory('moon_shard');
+                GAME.state.altarCryptUsed = true;
+                item.found = true;
+                addClue('祭坛融合月之碎片，出现夜光石。');
+                addInventory('nightstone', '💎 夜光石', '黑色的石头，内部闪烁着星光。');
+                setMessage('你将月之碎片放入祭坛，光芒汇聚，形成一块 <span class="highlight">夜光石</span>！', true);
+                unlockStory('moon_altar');
+                renderScene(sceneId);
+            }
+
+            function actionPillarCrypt(item, sceneId) {
+                if (GAME.state.pillarCryptRead) { setMessage('柱基上刻着 "暗影之钥，藏于灯火之中"。'); return; }
+                GAME.state.pillarCryptRead = true;
+                item.found = true;
+                addClue('柱基铭文： "暗影之钥，藏于灯火之中"。');
+                setMessage('你读到柱基上的铭文：<span class="highlight">"暗影之钥，藏于灯火之中"</span>', true);
+                renderScene(sceneId);
+            }
+
+            function actionChestCrypt(item, sceneId) {
+                if (GAME.state.chestCryptOpened) { setMessage('铁箱已经打开，里面有一把书房钥匙。'); return; }
+                if (!hasInventory('nightstone')) { setMessage('铁箱上有一个宝石凹槽，需要夜光石。'); return; }
+                removeInventory('nightstone');
+                GAME.state.chestCryptOpened = true;
+                item.found = true;
+                addClue('铁箱中获得了书房钥匙。');
+                addInventory('study_key', '🔑 书房钥匙', '铁质钥匙，刻着书本图案。');
+                setMessage('你将夜光石嵌入铁箱，咔嗒一声，箱子打开，你找到了 <span class="highlight">书房钥匙</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionCryptDoor(item, sceneId) {
+                if (GAME.state.cryptDoorUnlocked) { setMessage('铁门已经敞开，通往书房。'); return; }
+                if (!hasInventory('study_key')) { setMessage('铁门上有一个钥匙孔，需要书房钥匙。'); return; }
+                removeInventory('study_key');
+                GAME.state.cryptDoorUnlocked = true;
+                GAME.state.studyUnlocked = true;
+                item.found = true;
+                addClue('书房钥匙打开了铁门。');
+                setMessage('你插入书房钥匙，铁门缓缓开启 — <span class="highlight">欢迎来到书房！</span>', true);
+                renderScene(sceneId);
+                setTimeout(() => setMessage('📚 你现在可以前往书房了。'), 500);
+            }
+
+            function actionTorch(item, sceneId) {
+                if (GAME.state.torchLit) { setMessage('火炬已经点燃，照亮了墙上的暗格。'); return; }
+                if (!hasInventory('match')) { setMessage('需要火柴才能点燃火炬。'); return; }
+                removeInventory('match');
+                GAME.state.torchLit = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.torch;
+                addClue(`点燃火炬后，墙壁上出现数字 "${pwd}"。`);
+                setMessage(`你点燃火炬，火光映照下，墙上浮现数字 <span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            // 书房
+            function actionGlobe(item, sceneId) {
+                if (GAME.state.globeSearched) { setMessage('地球仪底座下已经空无一物。'); return; }
+                GAME.state.globeSearched = true;
+                item.found = true;
+                addClue('地球仪底座下压着一块绒布。');
+                addInventory('cloth', '🧽 绒布', '柔软的天鹅绒布。');
+                setMessage('你转动地球仪，发现底座下压着一块 <span class="highlight">绒布</span>。', true);
+                renderScene(sceneId);
+            }
+
+            function actionMirror(item, sceneId) {
+                if (GAME.state.mirrorCleaned) { setMessage(`铜镜已擦亮，映出书架密码。`, true); return; }
+                if (!hasInventory('cloth')) { setMessage('铜镜蒙灰，需要布擦拭。'); return; }
+                removeInventory('cloth');
+                GAME.state.mirrorCleaned = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.bookshelf;
+                addClue(`擦亮的铜镜反射出书架上的密码：${pwd}。`);
+                setMessage(`你用绒布擦去灰尘，镜中映出密码：<span class="highlight">${pwd}</span>`, true);
+                unlockStory('mirror_revelation');
+                renderScene(sceneId);
+            }
+
+            function actionBookshelf(item, sceneId) {
+                if (GAME.state.bookshelfUnlocked) { setMessage('书架已经移开，露出暗格。'); return; }
+                if (!GAME.state.mirrorCleaned) { setMessage('看不清书架上的顺序。'); return; }
+                const pwd = GAME.state.passwords.bookshelf;
+                showPasswordModal(`请输入书架上的三位数字密码（镜中所示）`, (input) => {
+                    if (input === pwd) {
+                        GAME.state.bookshelfUnlocked = true;
+                        item.found = true;
+                        addClue('书架密码正确，获得木柴和银钥匙。');
+                        addInventory('firewood', '🪵 木柴', '干燥的桦木柴。');
+                        addInventory('silver_key', '🔑 银钥匙', '精致的银钥匙。');
+                        setMessage('书架移开，你找到 <span class="highlight">木柴</span> 和 <span class="highlight">银钥匙</span>！', true);
+                        renderScene(sceneId);
+                        return true;
+                    } else { setMessage('❌ 密码错误。'); return false; }
+                }, '三位数字');
+            }
+
+            function actionFireplace(item, sceneId) {
+                if (GAME.state.fireplaceLit) { setMessage('壁炉中火焰已熄，灰烬里有翡翠宝石和纸条。'); return; }
+                if (!hasInventory('firewood')) { setMessage('需要木柴才能点燃。'); return; }
+                removeInventory('firewood');
+                GAME.state.fireplaceLit = true;
+                item.found = true;
+                const gardenPwd = GAME.state.passwords.gardenGate;
+                addClue('壁炉点燃后，灰烬中露出翡翠宝石和提示。');
+                addInventory('emerald_gem', '🟢 翡翠宝石', '晶莹剔透的翡翠。');
+                addClue(`纸条写着： "花园之门密码 ${gardenPwd}"`);
+                setMessage(`你点燃木柴，火焰腾起。灰烬中露出一枚 <span class="highlight">翡翠宝石</span> 和纸条：<span class="highlight">"${gardenPwd}"</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionDesk(item, sceneId) {
+                if (GAME.state.deskOpened) { setMessage('抽屉已经打开，里面有花园钥匙和羊皮纸。'); return; }
+                if (!hasInventory('silver_key')) { setMessage('抽屉被银锁锁住。'); return; }
+                removeInventory('silver_key');
+                GAME.state.deskOpened = true;
+                GAME.state.gardenUnlocked = true;
+                item.found = true;
+                const gardenPwd = GAME.state.passwords.gardenGate;
+                addClue('银钥匙打开书桌，获得花园钥匙和羊皮纸。');
+                addInventory('garden_key', '🔑 花园钥匙', '铁质钥匙，刻着藤蔓。');
+                addInventory('scroll_paper', '📜 羊皮纸', `写着 "${gardenPwd}"`);
+                setMessage(`抽屉弹开，你找到 <span class="highlight">花园钥匙</span> 和羊皮纸，上面写着 <span class="highlight">"${gardenPwd}"</span>。`, true);
+                renderScene(sceneId);
+                setTimeout(() => setMessage('🌿 你现在可以前往花园了。'), 500);
+            }
+
+            function actionFresco(item, sceneId) {
+                if (GAME.state.frescoRead) { setMessage('壁画上画着喷泉，刻着 "水落石出"。'); return; }
+                GAME.state.frescoRead = true;
+                item.found = true;
+                addClue('壁画提示： "水落石出" — 暗示喷泉的秘密。');
+                setMessage('你仔细观察，发现喷泉下方刻着 <span class="highlight">"水落石出"</span>', true);
+                renderScene(sceneId);
+            }
+
+            function actionInkwell(item, sceneId) {
+                if (GAME.state.inkwellUsed) { setMessage('墨水瓶已经空了。'); return; }
+                GAME.state.inkwellUsed = true;
+                item.found = true;
+                addClue('墨水瓶中还有一点墨水。');
+                setMessage('你打开墨水瓶，里面还有墨汁。', true);
+                renderScene(sceneId);
+            }
+
+            function actionQuill(item, sceneId) {
+                if (GAME.state.quillUsed) { setMessage('羽毛笔已经干涸。'); return; }
+                if (!GAME.state.inkwellUsed) { setMessage('羽毛笔需要墨水。'); return; }
+                GAME.state.quillUsed = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.quill;
+                addClue(`羽毛笔蘸墨后，在桌上留下了数字 "${pwd}" 。`);
+                setMessage(`你蘸了墨水，羽毛笔在桌上划出数字 <span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionCandleStudy(item, sceneId) {
+                if (GAME.state.candleStudyUsed) { setMessage('烛台已经点燃，照亮了暗藏的密码。'); return; }
+                if (!hasInventory('match')) { setMessage('需要火柴点燃烛台。'); return; }
+                removeInventory('match');
+                GAME.state.candleStudyUsed = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.candleStudy;
+                addClue(`烛光映出墙上数字 "${pwd}"。`);
+                setMessage(`你点燃烛台，墙上映出数字 <span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            // 花园
+            function actionFountain(item, sceneId) {
+                if (GAME.state.fountainSearched) { setMessage('喷泉池底有锁孔，已经打开过。'); return; }
+                if (!hasInventory('garden_key')) { setMessage('池底有个锁孔，需要花园钥匙。'); return; }
+                removeInventory('garden_key');
+                GAME.state.fountainSearched = true;
+                item.found = true;
+                addClue('喷泉钥匙孔转动，获得铜钥匙。');
+                addInventory('copper_key_garden', '🔑 铜钥匙', '黄铜钥匙，刻着星辰。');
+                setMessage('你将花园钥匙插入池底，转动 — 喷泉底座弹开，露出一把 <span class="highlight">铜钥匙</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionFlowerbed(item, sceneId) {
+                if (GAME.state.flowerbedDug) { setMessage('花坛已经被翻过。'); return; }
+                if (!hasInventory('copper_key_garden')) { setMessage('泥土松软，但没有工具。'); return; }
+                GAME.state.flowerbedDug = true;
+                item.found = true;
+                addClue('花坛中挖出一把铁锹。');
+                addInventory('shovel', '🪣 铁锹', '一把结实的铁锹。');
+                setMessage('你用铜钥匙撬开硬土，发现下面埋着一把 <span class="highlight">铁锹</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionTree(item, sceneId) {
+                if (GAME.state.treeDug) { setMessage('树根下已经挖过。'); return; }
+                if (!hasInventory('shovel')) { setMessage('树根泥土很硬，需要铁锹。'); return; }
+                removeInventory('shovel');
+                GAME.state.treeDug = true;
+                item.found = true;
+                addClue('树根下埋着一把金钥匙。');
+                addInventory('gold_key', '🔑 金钥匙', '闪闪发光的金钥匙，刻着鸢尾花。');
+                setMessage('你挥动铁锹，挖出一把 <span class="highlight">金钥匙</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionGardenStatue(item, sceneId) {
+                if (GAME.state.statueLocked) { setMessage('园丁像底座已经打开，里面有纸条。'); return; }
+                if (!hasInventory('gold_key')) { setMessage('底座有金色锁孔。'); return; }
+                removeInventory('gold_key');
+                GAME.state.statueLocked = true;
+                item.found = true;
+                const bookcasePwd = GAME.state.passwords.bookcase;
+                addClue(`园丁像中藏有纸条： "塔楼之锁：${bookcasePwd}"`);
+                setMessage(`你将金钥匙插入底座，暗格打开，纸条写着 <span class="highlight">"塔楼之锁：${bookcasePwd}"</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionGate(item, sceneId) {
+                if (GAME.state.gardenGateUnlocked) { setMessage('花园门已经敞开。'); return; }
+                if (!GAME.state.statueLocked) { setMessage('门紧锁着，需要密码。'); return; }
+                const pwd = GAME.state.passwords.gardenGate;
+                showPasswordModal(`请输入花园门的密码（羊皮纸上的数字）`, (input) => {
+                    if (input === pwd) {
+                        GAME.state.gardenGateUnlocked = true;
+                        GAME.state.towerUnlocked = true;
+                        item.found = true;
+                        addClue('花园门密码正确，进入塔楼。');
+                        setMessage('密码正确！铁门开启，你进入了 <span class="highlight">塔楼</span>！', true);
+                        renderScene(sceneId);
+                        setTimeout(() => setMessage('🗼 你现在可以前往塔楼了。'), 500);
+                        return true;
+                    } else { setMessage('❌ 密码错误。'); return false; }
+                }, '三位数字');
+            }
+
+            function actionWell(item, sceneId) {
+                if (GAME.state.wellDrawn) { setMessage('水井已经打捞过，空无一物。'); return; }
+                if (!hasInventory('copper_key_garden')) { setMessage('井边有个绞盘，需要钥匙卡住。'); return; }
+                GAME.state.wellDrawn = true;
+                item.found = true;
+                addClue('水井中打上一只水桶，里面有一把青铜匕首。');
+                addInventory('dagger', '🗡️ 青铜匕首', '锋利的青铜匕首。');
+                setMessage('你用铜钥匙卡住绞盘，打上一只水桶，里面有一把 <span class="highlight">青铜匕首</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionBush(item, sceneId) {
+                if (GAME.state.bushSearched) { setMessage('灌木丛被翻遍了。'); return; }
+                if (!hasInventory('dagger')) { setMessage('灌木丛茂密，需要利器割开。'); return; }
+                GAME.state.bushSearched = true;
+                item.found = true;
+                addClue('灌木丛中藏着一根蜡烛。');
+                addInventory('candle_item', '🕯️ 蜡烛', '一根白色的蜡烛。');
+                setMessage('你用匕首割开灌木，发现里面藏着一根 <span class="highlight">蜡烛</span>。', true);
+                renderScene(sceneId);
+            }
+
+            function actionBench(item, sceneId) {
+                if (GAME.state.benchRead) { setMessage('长椅上刻着 "月影之下，泉水涌出"。'); return; }
+                GAME.state.benchRead = true;
+                item.found = true;
+                addClue('长椅铭文： "月影之下，泉水涌出"。');
+                setMessage('你读到长椅上的诗句：<span class="highlight">"月影之下，泉水涌出"</span>', true);
+                renderScene(sceneId);
+            }
+
+            // 塔楼
+            function actionTapestry(item, sceneId) {
+                if (GAME.state.tapestryOpened) { setMessage('挂毯后面已经空了。'); return; }
+                if (!hasInventory('dagger')) { setMessage('挂毯边缘缝线很密，需要小刀。'); return; }
+                GAME.state.tapestryOpened = true;
+                item.found = true;
+                addClue('挂毯后藏着一块宝石碎片。');
+                addInventory('gem_shard', '💎 宝石碎片', '翡翠的碎片，闪烁着微光。');
+                setMessage('你用匕首挑开缝线，挂毯后掉出一块 <span class="highlight">宝石碎片</span>！', true);
+                renderScene(sceneId);
+            }
+
+            function actionBookcase(item, sceneId) {
+                if (GAME.state.bookcaseUnlocked) { setMessage('书柜已经打开，里面有一块石板。'); return; }
+                const pwd = GAME.state.passwords.bookcase;
+                showPasswordModal(`请输入书柜的密码（园丁像纸条）`, (input) => {
+                    if (input === pwd) {
+                        GAME.state.bookcaseUnlocked = true;
+                        item.found = true;
+                        addClue('书柜密码正确，获得古老石板。');
+                        addInventory('stone_tablet', '🪦 石板', '刻着符文和星图的古老石板。');
+                        setMessage('密码正确！书柜打开，你发现了一块 <span class="highlight">石板</span>。', true);
+                        renderScene(sceneId);
+                        return true;
+                    } else { setMessage('❌ 密码错误。'); return false; }
+                }, '三位数字');
+            }
+
+            function actionTelescope(item, sceneId) {
+                if (GAME.state.telescopeUsed) { setMessage('你已经观察过星空，得到密码。'); return; }
+                GAME.state.telescopeUsed = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.treasure;
+                addClue(`望远镜中看到星座排列，解出最终密码：${pwd}。`);
+                setMessage(`你望向星空，星座排列成数字：<span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionTreasure(item, sceneId) {
+                if (GAME.state.treasureOpened) { setMessage('宝箱已经打开，里面有一枚符文钥匙。'); return; }
+                const hasEmerald = hasInventory('emerald_gem');
+                const hasShard = hasInventory('gem_shard');
+                const hasTablet = hasInventory('stone_tablet');
+                if (!hasEmerald || !hasShard || !hasTablet) {
+                    setMessage('宝箱需要三件圣物：翡翠宝石、宝石碎片、古老石板。你缺少一些。');
+                    return;
+                }
+                const pwd = GAME.state.passwords.treasure;
+                showPasswordModal(`请输入最终密码（从望远镜获得）`, (input) => {
+                    if (input === pwd) {
+                        removeInventory('emerald_gem');
+                        removeInventory('gem_shard');
+                        removeInventory('stone_tablet');
+                        GAME.state.treasureOpened = true;
+                        item.found = true;
+                        addClue('宝箱开启，获得符文钥匙。');
+                        addInventory('rune_key', '🗝️ 符文钥匙', '刻满符文的钥匙，用于圣殿。');
+                        setMessage('三件圣物嵌入，密码正确！宝箱打开，你获得一把 <span class="highlight">符文钥匙</span>！', true);
+                        renderScene(sceneId);
+                        GAME.state.sanctumUnlocked = true;
+                        unlockStory('treasure_unlock');
+                        setTimeout(() => setMessage('✨ 圣殿之门已开启，前往最终之地！'), 500);
+                        return true;
+                    } else { setMessage('❌ 密码错误。'); return false; }
+                }, '三位数字');
+            }
+
+            function actionAstrolabe(item, sceneId) {
+                if (GAME.state.astrolabeUsed) { setMessage('星盘已经解读，上面刻着 "日月同辉"。'); return; }
+                GAME.state.astrolabeUsed = true;
+                item.found = true;
+                addClue('星盘解读出 "日月同辉" — 可能暗示圣殿的机关。');
+                setMessage('你仔细端详星盘，发现刻着 <span class="highlight">"日月同辉"</span>', true);
+                renderScene(sceneId);
+            }
+
+            function actionCandleTower(item, sceneId) {
+                if (GAME.state.candleTowerLit) { setMessage('烛台已经点燃，照亮了墙上的暗格。'); return; }
+                if (!hasInventory('match')) { setMessage('需要火柴才能点燃蜡烛。'); return; }
+                if (!hasInventory('candle_item')) { setMessage('你需要一根蜡烛。'); return; }
+                removeInventory('match');
+                removeInventory('candle_item');
+                GAME.state.candleTowerLit = true;
+                item.found = true;
+                const pwd = GAME.state.passwords.candleTower;
+                addClue(`点燃烛台，墙上显露出数字 "${pwd}"。`);
+                setMessage(`你点燃蜡烛，烛光映在墙上，出现数字 <span class="highlight">${pwd}</span>`, true);
+                renderScene(sceneId);
+            }
+
+            function actionPaintingTower(item, sceneId) {
+                if (GAME.state.paintingTowerSearched) { setMessage('画像背后已经空了。'); return; }
+                GAME.state.paintingTowerSearched = true;
+                item.found = true;
+                addClue('年轻格雷的画像背后刻着 "真理在圣殿等待"。');
+                setMessage('你翻转画像，背后刻着 <span class="highlight">"真理在圣殿等待"</span>', true);
+                renderScene(sceneId);
+            }
+
+            // 圣殿
+            function actionAltar(item, sceneId) {
+                if (GAME.state.altarActivated) { setMessage('祭坛已经激活，光芒四射。'); return; }
+                if (!hasInventory('rune_key')) { setMessage('祭坛中央有锁孔，需要符文钥匙。'); return; }
+                if (!GAME.state.pillarSolved) { setMessage('四根石柱的符文尚未全部点亮。'); return; }
+                removeInventory('rune_key');
+                GAME.state.altarActivated = true;
+                item.found = true;
+                addClue('祭坛激活，翡翠书斋的终极秘密被唤醒！');
+                setMessage('你将符文钥匙插入祭坛，光芒绽放 — <span class="highlight">你揭开了翡翠书斋的终极秘密！</span>', true);
+                unlockStory('final_altar');
+                renderScene(sceneId);
+                setTimeout(() => checkWin(), 300);
+            }
+
+            function actionPillar(item, sceneId) {
+                if (GAME.state.pillarSolved) { setMessage('四根石柱已经全部点亮。'); return; }
+                if (!GAME.state.astrolabeUsed || !GAME.state.candleTowerLit) {
+                    setMessage('石柱上的符文需要正确的顺序和数字。');
+                    return;
+                }
+                GAME.state.pillarSolved = true;
+                item.found = true;
+                addClue('石柱符文按星盘和烛光提示排列，机关解除。');
+                setMessage('你根据星盘和烛光提示调整符文，四根石柱依次点亮！', true);
+                renderScene(sceneId);
+            }
+
+            function actionCrystal(item, sceneId) {
+                if (GAME.state.crystalUsed) { setMessage('水晶已经被拿走。'); return; }
+                GAME.state.crystalUsed = true;
+                item.found = true;
+                addClue('水晶折射出光芒，照亮了祭坛的路径。');
+                setMessage('你触碰水晶，光芒四射，照亮了祭坛的通道。', true);
+                renderScene(sceneId);
+            }
+
+            function actionScrollSanctum(item, sceneId) {
+                if (GAME.state.scrollSanctumRead) { setMessage('卷轴上写着："当符文与星象合一，智慧之门将启。"'); return; }
+                GAME.state.scrollSanctumRead = true;
+                item.found = true;
+                addClue('卷轴预言： "当符文与星象合一，智慧之门将启。"');
+                setMessage('你展开卷轴，读到：<span class="highlight">"当符文与星象合一，智慧之门将启。"</span>', true);
+                renderScene(sceneId);
+            }
+
+            function actionBrazier(item, sceneId) {
+                if (GAME.state.brazierLit) { setMessage('火盆已经点燃，火光映出“永恒”二字。'); return; }
+                if (!hasInventory('match')) { setMessage('需要火柴才能点燃火盆。'); return; }
+                removeInventory('match');
+                GAME.state.brazierLit = true;
+                item.found = true;
+                addClue('火盆点燃，出现“永恒”二字。');
+                setMessage('你点燃火盆，火焰中浮现出 <span class="highlight">“永恒”</span> 二字。', true);
+                renderScene(sceneId);
+            }
+
+            // 胜利
+            function checkWin() {
+                if (GAME.state.altarActivated && !GAME.state.gameWon) {
+                    GAME.state.gameWon = true;
+                    setTimeout(() => {
+                        dom.winModal.classList.add('show');
+                        setMessage('🏆 恭喜通关！六幕史诗，圆满落幕。');
+                    }, 400);
+                }
+            }
+
+            // 提示
+            function showHint() {
+                if (GAME.state.gameWon) { setMessage('🎉 你已经通关！点击"重开"再次体验。'); return; }
+                const s = GAME.state;
+                const inv = GAME.inventory;
+                const hints = [];
+
+                if (!s.paintingSearched) hints.push('检查肖像画。');
+                if (s.paintingSearched && !s.clockOpened && !hasInventory('winding_key')) hints.push('用发条钥匙开落地钟。');
+                if (s.clockOpened && !s.statueSolved && hasInventory('sun_medal')) hints.push('将太阳徽章嵌入石像。');
+                if (!s.cryptUnlocked && s.statueSolved) hints.push('地窖入口已开，进入地窖。');
+                if (!s.carpetLifted) hints.push('检查地毯。');
+                if (!s.windowOpened) hints.push('打开窗户。');
+                if (!s.chandelierSearched) hints.push('查看吊灯。');
+
+                if (s.cryptUnlocked && s.currentScene === 'crypt') {
+                    if (!s.sarcophagusOpened && hasInventory('copper_key_hall')) hints.push('用铜钥匙开石棺。');
+                    if (s.sarcophagusOpened && !s.altarCryptUsed && hasInventory('moon_shard')) hints.push(
+                        '将月之碎片放入祭坛。');
+                    if (s.altarCryptUsed && !s.chestCryptOpened && hasInventory('nightstone')) hints.push(
+                        '用夜光石打开铁箱。');
+                    if (s.chestCryptOpened && !s.cryptDoorUnlocked && hasInventory('study_key')) hints.push(
+                        '用书房钥匙打开铁门。');
+                    if (!s.torchLit && hasInventory('match')) hints.push('点燃火炬照亮暗格。');
+                    if (!s.pillarCryptRead) hints.push('查看柱基上的铭文。');
+                }
+
+                if (s.studyUnlocked && s.currentScene === 'study') {
+                    if (!s.globeSearched) hints.push('检查地球仪。');
+                    if (s.globeSearched && !s.mirrorCleaned && hasInventory('cloth')) hints.push('用绒布擦铜镜。');
+                    if (s.mirrorCleaned && !s.bookshelfUnlocked) hints.push('书架需要密码，镜中所示。');
+                    if (s.bookshelfUnlocked && !s.fireplaceLit && hasInventory('firewood')) hints.push('用木柴点燃壁炉。');
+                    if (s.fireplaceLit && !s.deskOpened && hasInventory('silver_key')) hints.push('用银钥匙开书桌。');
+                    if (s.deskOpened && !s.gardenUnlocked) hints.push('前往花园。');
+                    if (!s.frescoRead) hints.push('查看壁画。');
+                    if (!s.inkwellUsed) hints.push('检查墨水瓶。');
+                    if (s.inkwellUsed && !s.quillUsed && hasInventory('quill')) hints.push('用羽毛笔蘸墨水。');
+                    if (!s.candleStudyUsed && hasInventory('match')) hints.push('点燃书桌烛台。');
+                }
+
+                if (s.gardenUnlocked && s.currentScene === 'garden') {
+                    if (!s.fountainSearched && hasInventory('garden_key')) hints.push('将花园钥匙插入喷泉。');
+                    if (s.fountainSearched && !s.flowerbedDug && hasInventory('copper_key_garden')) hints.push(
+                        '用铜钥匙翻花坛。');
+                    if (s.flowerbedDug && !s.treeDug && hasInventory('shovel')) hints.push('用铁锹挖古树。');
+                    if (s.treeDug && !s.statueLocked && hasInventory('gold_key')) hints.push('用金钥匙开园丁像。');
+                    if (s.statueLocked && !s.gardenGateUnlocked) hints.push('输入花园门密码（羊皮纸）。');
+                    if (!s.wellDrawn && hasInventory('copper_key_garden')) hints.push('用铜钥匙卡住绞盘打水井。');
+                    if (!s.bushSearched && hasInventory('dagger')) hints.push('用匕首割开灌木丛。');
+                    if (!s.benchRead) hints.push('阅读长椅上的诗句。');
+                }
+
+                if (s.towerUnlocked && s.currentScene === 'tower') {
+                    if (!s.tapestryOpened && hasInventory('dagger')) hints.push('用匕首挑开挂毯。');
+                    if (!s.bookcaseUnlocked) hints.push('书柜需要密码（园丁像纸条）。');
+                    if (!s.telescopeUsed) hints.push('用望远镜观察星空。');
+                    if (!s.treasureOpened && hasInventory('emerald_gem') && hasInventory('gem_shard') && hasInventory(
+                            'stone_tablet')) hints.push(
+                        '将三件圣物嵌入宝箱并输入望远镜密码。');
+                    if (!s.astrolabeUsed) hints.push('研究星盘。');
+                    if (!s.candleTowerLit && hasInventory('match') && hasInventory('candle_item')) hints.push(
+                        '点燃塔楼烛台。');
+                    if (!s.paintingTowerSearched) hints.push('查看年轻格雷的画像。');
+                }
+
+                if (s.sanctumUnlocked && s.currentScene === 'sanctum') {
+                    if (!s.pillarSolved && s.astrolabeUsed && s.candleTowerLit) hints.push('调整石柱符文。');
+                    if (!s.altarActivated && hasInventory('rune_key') && s.pillarSolved) hints.push(
+                        '将符文钥匙插入祭坛。');
+                    if (!s.crystalUsed) hints.push('触碰水晶。');
+                    if (!s.scrollSanctumRead) hints.push('阅读卷轴。');
+                    if (!s.brazierLit && hasInventory('match')) hints.push('点燃火盆。');
+                }
+
+                if (hints.length === 0) {
+                    if (GAME.clues.length > 0) {
+                        const c = GAME.clues[Math.floor(Math.random() * GAME.clues.length)];
+                        setMessage(`💡 回想线索：${c}`);
+                    } else {
+                        setMessage('💡 仔细探索每个角落。');
+                    }
+                } else {
+                    setMessage(`💡 ${hints[Math.floor(Math.random() * hints.length)]}`);
+                }
+            }
+
+            function resetGame() {
+                // 重新生成随机密码
+                initPasswords();
+                GAME.inventory = [];
+                GAME.clues = [];
+                GAME.storyUnlocked = [];
+                GAME.state = {
+                    currentScene: 'hall',
+                    paintingSearched: false,
+                    clockOpened: false,
+                    statueSolved: false,
+                    carpetLifted: false,
+                    windowOpened: false,
+                    chandelierSearched: false,
+                    doorUnlocked: false,
+                    sarcophagusOpened: false,
+                    altarCryptUsed: false,
+                    pillarCryptRead: false,
+                    chestCryptOpened: false,
+                    cryptDoorUnlocked: false,
+                    torchLit: false,
+                    globeSearched: false,
+                    mirrorCleaned: false,
+                    bookshelfUnlocked: false,
+                    fireplaceLit: false,
+                    deskOpened: false,
+                    frescoRead: false,
+                    inkwellUsed: false,
+                    quillUsed: false,
+                    candleStudyUsed: false,
+                    fountainSearched: false,
+                    flowerbedDug: false,
+                    treeDug: false,
+                    statueLocked: false,
+                    gardenGateUnlocked: false,
+                    wellDrawn: false,
+                    bushSearched: false,
+                    benchRead: false,
+                    tapestryOpened: false,
+                    bookcaseUnlocked: false,
+                    telescopeUsed: false,
+                    treasureOpened: false,
+                    astrolabeUsed: false,
+                    candleTowerLit: false,
+                    paintingTowerSearched: false,
+                    altarActivated: false,
+                    pillarSolved: false,
+                    crystalUsed: false,
+                    scrollSanctumRead: false,
+                    brazierLit: false,
+                    cryptUnlocked: false,
+                    studyUnlocked: false,
+                    gardenUnlocked: false,
+                    towerUnlocked: false,
+                    sanctumUnlocked: false,
+                    gameWon: false,
+                    passwords: GAME.state.passwords, // 保留新密码
+                };
+                Object.keys(GAME.scenes).forEach(k => {
+                    GAME.scenes[k].items.forEach(it => { it.found = false;
+                        it.disabled = false; });
+                });
+                dom.modal.classList.remove('show');
+                dom.winModal.classList.remove('show');
+                dom.storyModal.classList.remove('show');
+                dom.scene.classList.add('fade');
+                renderStoryModal();
+                setTimeout(() => {
+                    renderScene('hall');
+                    updateNav();
+                    dom.scene.classList.remove('fade');
+                    setMessage('🔄 游戏已重置，新的密码已生成！从门厅开始。');
+                }, 280);
+            }
+
+            function init() {
+                // 初始化随机密码
+                initPasswords();
+                renderScene('hall');
+                updateNav();
+                renderStoryModal();
+                setMessage('🏛️ 你站在门厅，空气中弥漫着檀香... 寻找线索，揭开六幕传奇。');
+
+                dom.navHall.addEventListener('click', () => switchScene('hall'));
+                dom.navCrypt.addEventListener('click', () => switchScene('crypt'));
+                dom.navStudy.addEventListener('click', () => switchScene('study'));
+                dom.navGarden.addEventListener('click', () => switchScene('garden'));
+                dom.navTower.addEventListener('click', () => switchScene('tower'));
+                dom.navSanctum.addEventListener('click', () => switchScene('sanctum'));
+
+                dom.btnHint.addEventListener('click', showHint);
+                dom.btnReset.addEventListener('click', resetGame);
+                dom.winRestart.addEventListener('click', resetGame);
+
+                dom.btnStory.addEventListener('click', () => {
+                    dom.storyModal.classList.add('show');
+                });
+                dom.storyClose.addEventListener('click', () => {
+                    dom.storyModal.classList.remove('show');
+                });
+                dom.storyModal.addEventListener('click', (e) => {
+                    if (e.target === dom.storyModal) dom.storyModal.classList.remove('show');
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'h' || e.key === 'H') showHint();
+                    if (e.key === 'r' || e.key === 'R') { if (confirm('重置游戏？')) resetGame(); }
+                    if (e.key === '1') switchScene('hall');
+                    if (e.key === '2') switchScene('crypt');
+                    if (e.key === '3') switchScene('study');
+                    if (e.key === '4') switchScene('garden');
+                    if (e.key === '5') switchScene('tower');
+                    if (e.key === '6') switchScene('sanctum');
+                });
+
+                console.log('📜 翡翠书斋已加载');
+                console.log('💡 快捷键: [1-6]切换场景 [H]提示 [R]重置');
+                console.log('🔑 本次密码已随机生成，祝你好运！');
+            }
+
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                init();
+            } else {
+                document.addEventListener('DOMContentLoaded', init);
+            }
+        })();
+    </script>
+</body>
+</html>
